@@ -61,9 +61,35 @@ const dialog = document.querySelector("#details-dialog");
 const toast = document.querySelector("#toast");
 
 let activeCategory = "All";
-let savedIds = new Set(
-  JSON.parse(localStorage.getItem("skillorbit-saved") || "[]")
-);
+function reportStorageError(message) {
+  const notice = document.querySelector("#storage-error");
+  notice.textContent = message;
+  notice.hidden = false;
+}
+
+function loadSavedIds() {
+  try {
+    const values = JSON.parse(localStorage.getItem("skillorbit-saved") || "[]");
+    if (!Array.isArray(values) || values.some(id => !Number.isInteger(id))) {
+      throw new Error("Invalid saved data");
+    }
+    return new Set(values.filter(id => internships.some(item => item.id === id)));
+  } catch {
+    reportStorageError("Saved roles could not be loaded. You can still browse and save roles for this visit.");
+    return new Set();
+  }
+}
+
+function persistSavedIds() {
+  try {
+    localStorage.setItem("skillorbit-saved", JSON.stringify([...savedIds]));
+    document.querySelector("#storage-error").hidden = true;
+  } catch {
+    reportStorageError("Your browser could not save these roles. Your selections will remain available for this visit only.");
+  }
+}
+
+let savedIds = loadSavedIds();
 let savedOnly = false;
 let activeInternship = null;
 let toastTimer;
@@ -203,16 +229,18 @@ function setCategory(category) {
 function toggleSaved(id) {
   if (savedIds.has(id)) {
     savedIds.delete(id);
-    localStorage.setItem("skillorbit-saved", JSON.stringify([...savedIds]));
     showToast("Removed from saved internships.");
   } else {
     savedIds.add(id);
-    localStorage.setItem("skillorbit-saved", JSON.stringify([...savedIds]));
     showToast("Internship saved.");
   }
 
+  persistSavedIds();
   renderInternships();
   updateDialogSaveButton();
+  if (!dialog.open) {
+    (grid.querySelector(`[data-save="${id}"]`) || savedToggle).focus();
+  }
 }
 
 function openDetails(id) {
@@ -320,7 +348,10 @@ document.querySelector("#dialog-save").addEventListener("click", () => {
 
 // Close dialog by clicking outside its panel
 dialog.addEventListener("click", event => {
-  if (event.target === dialog) dialog.close();
+  const bounds = dialog.getBoundingClientRect();
+  if (event.target === dialog && (event.clientX < bounds.left ||
+      event.clientX > bounds.right || event.clientY < bounds.top ||
+      event.clientY > bounds.bottom)) dialog.close();
 });
 
 // Mobile navigation
@@ -338,6 +369,7 @@ nav.addEventListener("click", event => {
   if (event.target.closest("a")) {
     nav.classList.remove("open");
     menuToggle.setAttribute("aria-expanded", "false");
+    menuToggle.setAttribute("aria-label", "Open navigation");
   }
 });
 

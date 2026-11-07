@@ -21,7 +21,7 @@
     </a>
 
     <button class="menu-toggle" id="menu-toggle"
-      aria-expanded="false" aria-controls="nav">☰</button>
+      aria-label="Open navigation" aria-expanded="false" aria-controls="nav">☰</button>
 
     <nav id="nav" class="nav" aria-label="Main navigation">
       <a class="nav-link active" href="#home">Home</a>
@@ -108,6 +108,7 @@
         <button id="clear-filters" class="clear-button" type="button">Clear filters ↺</button>
       </div>
 
+      <p id="storage-error" role="alert" class="error-message" hidden></p>
       <div class="internship-grid" id="internship-grid"></div>
 
       <div class="empty-state" id="empty-state" hidden>
@@ -142,7 +143,7 @@
     <span>Made for the next generation.</span>
   </footer>
 
-  <dialog id="details-dialog" class="details-dialog">
+  <dialog id="details-dialog" class="details-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
     <form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form>
     <p class="eyebrow">OPPORTUNITY DETAILS</p>
     <h2 id="dialog-title"></h2>
